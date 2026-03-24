@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,9 +10,23 @@ namespace JwtAuthentication.Controllers;
 public class SomeThingController : ControllerBase
 {
     [HttpGet]
-    [Authorize]
     public async Task<ActionResult<string>> GetSomeThing()
     {
         return Ok("Hello World!");
+    }
+
+    [HttpGet]
+    [Route("Roles")]
+    [Authorize(Roles = "Manager")]
+    [Authorize(Roles = "Admin,Staff")]
+    public async Task<ActionResult<string>> GetSomeThingByRoles()
+    {
+        var roles = this.HttpContext.User.FindAll(ClaimTypes.Role).Select(x => x.Value);
+        var iden = this.HttpContext.User.Identities.Select(x => x.Name);
+        return Ok(new
+        {
+            roles = roles,
+            auths = iden
+        });
     }
 }
