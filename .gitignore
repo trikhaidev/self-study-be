@@ -19,12 +19,6 @@
 *.sln.docstates
 
 #################################
-# ASP.NET Core
-#################################
-**/Properties/launchSettings.json
-**/appsettings.Development.json
-
-#################################
 # Logs
 #################################
 **/logs/
