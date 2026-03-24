@@ -8,6 +8,7 @@ public class AppDbContext : DbContext
     public DbSet<AppUser> Users { get; set; }
     public DbSet<AppRole> Roles { get; set; }
     public DbSet<AppUserRole> UserRoles { get; set; }
+    public DbSet<AppJwtKey> JwtKeys {get;set;}
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
@@ -38,6 +39,31 @@ public class AppDbContext : DbContext
         {
             entity.HasIndex(u => u.UserName)
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<AppJwtKey>(entity =>
+        {
+            entity.ToTable("JwtKey");
+            entity.HasKey(k => k.Id);
+
+            entity.Property(k => k.KeyId)
+                .IsRequired()
+                .HasColumnType("VARCHAR")
+                .HasMaxLength(250);
+
+            entity.Property(k => k.PublicKey)
+                .IsRequired()
+                .HasColumnType("NVARCHAR(MAX)");
+
+            entity.Property(k => k.IsActive)
+                .IsRequired()
+                .HasColumnType("NVARCHAR(MAX)");
+
+            entity.Property(k => k.IsActive)
+                .IsRequired();
+            
+            entity.Property(k => k.Exp)
+                .IsRequired();
         });
 
         FakeDataAppUser(modelBuilder);
