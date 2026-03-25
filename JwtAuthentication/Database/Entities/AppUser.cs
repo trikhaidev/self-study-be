@@ -29,4 +29,5 @@ public class AppUser
     public string Password {get;set;} = null!;
 
     public List<AppUserRole>? UserRoles {get;set;}
+    public List<AppUserToken>? Tokens {get;set;}
 }

@@ -17,12 +17,12 @@ public class SomeThingController : ControllerBase
 
     [HttpGet]
     [Route("Roles")]
-    [Authorize(Roles = "Manager")]
-    [Authorize(Roles = "Admin,Staff")]
+    [Authorize(Roles = "Guest")]
+    [Authorize(Roles = "Staff,User,Admin")]
     public async Task<ActionResult<string>> GetSomeThingByRoles()
     {
         var roles = this.HttpContext.User.FindAll(ClaimTypes.Role).Select(x => x.Value);
-        var iden = this.HttpContext.User.Identities.Select(x => x.Name);
+        var iden = this.HttpContext.User.Identities.Select(x => x.NameClaimType);
         return Ok(new
         {
             roles = roles,

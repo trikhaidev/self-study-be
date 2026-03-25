@@ -9,6 +9,7 @@ public class AppDbContext : DbContext
     public DbSet<AppRole> Roles { get; set; }
     public DbSet<AppUserRole> UserRoles { get; set; }
     public DbSet<AppJwtKey> JwtKeys {get;set;}
+    public DbSet<AppUserToken> UserTokens {get;set;}
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
@@ -64,6 +65,19 @@ public class AppDbContext : DbContext
             
             entity.Property(k => k.Exp)
                 .IsRequired();
+        });
+
+        modelBuilder.Entity<AppUserToken>(entity =>
+        {
+            entity.ToTable("UserToken");
+            entity.HasKey(t => new{t.RefreshToken,t.AccessToken});
+            entity.Property(t => t.IsActive).IsRequired();
+            entity.Property(t => t.Exp).IsRequired();
+
+            entity.HasOne(t => t.User)
+                    .WithMany(u => u.Tokens)
+                    .HasForeignKey(t => t.UserId)
+                    .IsRequired();
         });
 
         FakeDataAppUser(modelBuilder);
