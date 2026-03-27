@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 using JwtAuthentication.Database.Entities;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace JwtAuthentication.Services;
 
@@ -17,6 +18,8 @@ public interface ITokenManagementService
     Task<BaseResponseModel<string>> GenerateAccessToken(AppUser user);
     BaseResponseModel<string> GenerateRefreshToken();
     Task<BaseResponseModel<string>> SaveToken(AppUser user, string accessToken, string refreshToken);
+    Task<BaseResponseModel<LoginResponse>> RefreshSession(string refreshToken);
+    Task<BaseResponseModel<string>> Logout(string accessToken);
 }
 
 public class TokenManagementService : ITokenManagementService
@@ -24,10 +27,12 @@ public class TokenManagementService : ITokenManagementService
     static RSA _rsa = RSA.Create();
     readonly AppDbContext context;
     readonly JwtConfig jwtConfig;
-    public TokenManagementService(AppDbContext context, IOptions<JwtConfig> options)
+    readonly IMemoryCache cache;
+    public TokenManagementService(AppDbContext context, IMemoryCache cache,IOptions<JwtConfig> options)
     {
         this.context = context;
         this.jwtConfig = options.Value;
+        this.cache = cache;
     }
     public async Task<BaseResponseModel<LoginResponse>> Login(LoginRequest request)
     {
@@ -51,7 +56,7 @@ public class TokenManagementService : ITokenManagementService
             }
             var refreshToken = GenerateRefreshToken();
 
-            var saveToken = await SaveToken(user,accessToken.Data!,refreshToken.Data!);
+            var saveToken = await SaveToken(user, accessToken.Data!, refreshToken.Data!);
             if (saveToken.IsError)
             {
                 res.IsError = true;
@@ -61,8 +66,8 @@ public class TokenManagementService : ITokenManagementService
 
             res.Data = new LoginResponse
             {
-              AccessToken = accessToken.Data!,
-              RefreshToken = refreshToken.Data!,  
+                AccessToken = accessToken.Data!,
+                RefreshToken = refreshToken.Data!,
             };
             res.Message = "Đăng nhập thành công";
         }
@@ -179,6 +184,73 @@ public class TokenManagementService : ITokenManagementService
 
             res.Data = Convert.ToBase64String(buffer);
             res.Message = "Tạo refresh token thành công";
+        }
+        catch (Exception e)
+        {
+            res.IsError = true;
+            res.Message = $"Lỗi: {e.Message}";
+        }
+        return res;
+    }
+
+    public async Task<BaseResponseModel<LoginResponse>> RefreshSession(string refreshToken)
+    {
+        var res = new BaseResponseModel<LoginResponse>();
+        try
+        {
+            var tokenWithUser = await context.UserTokens.Include(x => x.User)
+                                                        .FirstOrDefaultAsync(x => x.RefreshToken == refreshToken
+                                                                            && x.IsActive
+                                                                            && x.Exp > DateTime.Now);
+            if (tokenWithUser == null)
+            {
+                res.Message = "Mã làm mới phiên đăng nhập không khả dụng!";
+                return res;
+            }
+
+            tokenWithUser.IsActive = false;
+            await context.SaveChangesAsync();
+            var logout = await Logout($"Bearer {tokenWithUser.AccessToken}");
+            if (logout.IsError)
+            {
+                res.Message = "Vui lòng thử lại sau!";
+                return res;
+            }
+            return await Login(new LoginRequest
+            {
+                UserName = tokenWithUser.User!.UserName,
+                Password = tokenWithUser.User!.Password,
+            });
+        }
+        catch (Exception e)
+        {
+            res.IsError = true;
+            res.Message = $"Lỗi: {e.Message}";
+        }
+        return res;
+    }
+
+    public async Task<BaseResponseModel<string>> Logout(string accessToken)
+    {
+        var res = new BaseResponseModel<string>();
+        try
+        {
+            if (!cache.TryGetValue(accessToken, out _))
+            {
+                var options = new MemoryCacheEntryOptions()
+                            .SetSlidingExpiration(TimeSpan.FromMinutes(30))
+                            .SetPriority(CacheItemPriority.High);
+                cache.Set(accessToken,true,options);
+            }
+
+            var userToken = await context.UserTokens.FirstOrDefaultAsync(x => x.AccessToken == accessToken.Substring("Bearer ".Length));
+            if (userToken != null)
+            {
+                userToken.IsActive = false;
+                await context.SaveChangesAsync();
+            }
+
+            res.Message = "Đăng xuất thành công";
         }
         catch (Exception e)
         {

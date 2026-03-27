@@ -1,5 +1,6 @@
 
 using JwtAuthentication.Database;
+using JwtAuthentication.Middlewares;
 using JwtAuthentication.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -55,7 +56,7 @@ public class Program
                                 }
                             };
                         });
-
+        builder.Services.AddMemoryCache();
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -65,7 +66,7 @@ public class Program
         }
 
         app.UseHttpsRedirection();
-
+        app.UseMiddleware<CheckLogOutMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
 

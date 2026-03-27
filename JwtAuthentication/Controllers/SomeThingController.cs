@@ -17,7 +17,7 @@ public class SomeThingController : ControllerBase
 
     [HttpGet]
     [Route("Roles")]
-    [Authorize(Roles = "Guest")]
+    // [Authorize(Roles = "Guest")]
     [Authorize(Roles = "Staff,User,Admin")]
     public async Task<ActionResult<string>> GetSomeThingByRoles()
     {
