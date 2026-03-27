@@ -70,10 +70,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<AppUserToken>(entity =>
         {
             entity.ToTable("UserToken");
-            entity.HasKey(t => new{t.RefreshToken,t.AccessToken});
+            entity.HasKey(t => t.RefreshToken);
             entity.Property(t => t.IsActive).IsRequired();
             entity.Property(t => t.Exp).IsRequired();
-
+            entity.Property(t => t.AccessToken).HasColumnType("NVARCHAR(1000)").IsRequired();
             entity.HasOne(t => t.User)
                     .WithMany(u => u.Tokens)
                     .HasForeignKey(t => t.UserId)
@@ -90,10 +90,10 @@ public class AppDbContext : DbContext
             new AppUser
             {
                 Id = 1,
-                FullName = "Nguyễn Văn An",
-                BirthDay = new DateOnly(1995, 5, 12),
-                Address = "Hà Nội",
-                UserName = "nguyenvanan",
+                FullName = "Nguyễn Trí Khải",
+                BirthDay = new DateOnly(2003, 2, 20),
+                Address = "Đồng Nai",
+                UserName = "ntkhai2222",
                 Password = "123456"
             },
             new AppUser

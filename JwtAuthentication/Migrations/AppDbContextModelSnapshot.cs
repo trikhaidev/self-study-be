@@ -141,11 +141,11 @@ namespace JwtAuthentication.Migrations
                         new
                         {
                             Id = 1,
-                            Address = "Hà Nội",
-                            BirthDay = new DateOnly(1995, 5, 12),
-                            FullName = "Nguyễn Văn An",
+                            Address = "Đồng Nai",
+                            BirthDay = new DateOnly(2003, 2, 20),
+                            FullName = "Nguyễn Trí Khải",
                             Password = "123456",
-                            UserName = "nguyenvanan"
+                            UserName = "ntkhai2222"
                         },
                         new
                         {
@@ -323,7 +323,8 @@ namespace JwtAuthentication.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("AccessToken")
-                        .HasColumnType("nvarchar(450)");
+                        .IsRequired()
+                        .HasColumnType("NVARCHAR(1000)");
 
                     b.Property<DateTime>("Exp")
                         .HasColumnType("datetime2");
@@ -334,7 +335,7 @@ namespace JwtAuthentication.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.HasKey("RefreshToken", "AccessToken");
+                    b.HasKey("RefreshToken");
 
                     b.HasIndex("UserId");
 

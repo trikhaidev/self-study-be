@@ -21,7 +21,7 @@ public class AuthController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Login([FromBody][Required]LoginRequest model)
     {
-        var res = await tokenService.GenerateAccessToken(model);
+        var res = await tokenService.Login(model);
         if (res.IsError)
         {
             return base.StatusCode((int)HttpStatusCode.InternalServerError,res);
