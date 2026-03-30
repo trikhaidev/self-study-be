@@ -16,7 +16,7 @@ namespace ReviewEntityFrameworkCore.Database
         [Column(TypeName = "NVARCHAR(MAX)")]
         public string Description { get; set; } = null!;
 
-        public int? AuthorId { get; set; }
+        public int AuthorId { get; set; }
         public Author? Author { get; set; }
     }
 }
