@@ -17,7 +17,7 @@ namespace ReviewEntityFrameworkCore.Database
             ILoggerFactory loggerFactory = LoggerFactory.Create(builder => {
                 builder
                     .AddFilter(DbLoggerCategory.Database.Command.Name, LogLevel.Information)
-                    .AddFilter(DbLoggerCategory.Query.Name, LogLevel.Debug)
+                    .AddFilter(DbLoggerCategory.Query.Name, LogLevel.Information)
                     .AddConsole();
             });
             optionsBuilder.UseSqlServer(@"Server=.\SQLEXPRESS;Database=ReviewEntityFrameworkCore;Trusted_Connection=True;TrustServerCertificate=True");
@@ -32,7 +32,7 @@ namespace ReviewEntityFrameworkCore.Database
                 entity.HasOne(a => a.Author)
                        .WithMany(au => au.Articles)
                        .HasForeignKey(a => a.AuthorId)
-                       .IsRequired()
+                       .IsRequired(false)
                        .OnDelete(DeleteBehavior.Restrict);
             });
         }
