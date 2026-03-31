@@ -14,12 +14,25 @@ namespace ReviewEntityFrameworkCore
             var author = context.Authors.FirstOrDefault(x => x.Id == 1);
             var articles = context.Articles.Where(x => x.AuthorId == 1).ToList();
 
+            context.RemoveRange(articles);
             context.Remove(author!);
             context.SaveChanges();
         }
     }
 
     /*
+        DeleteBehavior.NoAction: sinh ra dưới db FOREIGN KEY NO ACTION. Khác với những enum không có tiền tố Client khác, trường hợp này sẽ chặn ngay trên
+            application nếu phát hiện ra data cha vẫn còn data con tham chiếu. Tức là ngày khi gọi lệnh remove nếu EF phát hiện ra vẫn còn data con chưa
+            xóa thì sẽ quăng exception luôn, không thực hiện gọi lệnh dưới db.
+            => Tóm lại nếu EF phát hiện ra vẫn còn data con chưa xóa thì sẽ chặn luôn ngay trên application, không thực hiện gọi lệnh dưới db.
+        
+        DeleteBehavior.ClientNoAction: sinh ra dưới db FOREEIGN KEY NO ACTION. EF sẽ không làm gì cả, không chặn, không kiểm tra, bạn yêu cầu xóa gì thì
+            nó sẽ sinh ra lệnh xóa đó dưới db (khi gọi saveChanges()), còn việc có xóa được hay không thì phụ thuộc hoàn toàn vào db.
+            => Tóm lại, ngay khi bạn gọi saveChanges() thì EF sẽ sinh ra lệnh xóa data cha luôn, còn việc có xóa được hay không thì phụ thuộc hoàn toàn vào
+            db
+            => Lưu ý: Vì nó sinh ra FOREIGN KEY NO ACTION dưới db nên dù EF không chặn thì khi xóa nếu db phát hiện ra vẫn con data con tham chiếu đến
+            PRIMARY KEY của data cha thì db sẽ quăng exception luôn, không thực hiện xóa cha
+
         DeleteBehavior.Cascade: sinh ra dưới db FOREIGN KEY CASCADE. Khi xóa data cha thì những data con đang được EF tracking sẽ được sinh ra lệnh
             xóa dưới db trước, cuối cùng là lệnh xóa data cha. Còn những data con nào không được tracking thì sẽ được db tự động xóa (trường hợp này do db
             tự xử lý nên EF sẽ không sinh ra lệnh xóa data con)
