@@ -33,7 +33,7 @@ namespace ReviewEntityFrameworkCore.Database
                        .WithMany(au => au.Articles)
                        .HasForeignKey(a => a.AuthorId)
                        .IsRequired(true)
-                       .OnDelete(DeleteBehavior.Cascade);
+                       .OnDelete(DeleteBehavior.NoAction);
             });
         }
     }
