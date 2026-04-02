@@ -5,22 +5,41 @@ namespace ReviewEntityFrameworkCore
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var context = new AppDbContext();
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
-            var author = context.Authors.FirstOrDefault(x => x.Id == 1);
-            var articles = context.Articles.Where(x => x.AuthorId == 1).ToList();
-
-            context.RemoveRange(articles);
-            context.Remove(author!);
-            context.SaveChanges();
+            
+            var author = context.Authors.First();
+            author.Name = "New name";
+            var newArticle = new Article
+            {
+                Title = "New hehe",
+                Description = "New hehe description",
+                Author = author
+            };
+            author.Articles = new List<Article>();
+            author.Articles.Add(newArticle);
+            await context.SaveChangesAsync();
         }
     }
 
     /*
+        EF: không có OnUpdate
+
+        Giả sử bạn có 1 data con và 1 data cha. Sẽ có những Trường hợp sau:
+            + TH1: cả 2 đều là data mới chưa có trong db. Bạn không gọi Add() cho data cha mà chỉ gọi Add() cho duy nhất data con => Khi Add() data con
+                    EF sẽ tracking data con và đồng thơi tracking cả data cha trong đó luôn. =>Khi gọi SaveChanges() thì EF sẽ sinh ra lệnh insert cả data
+                    cha và data con dưới db, tất nhiên là sẽ sinh ra lệnh insert data cha trước.
+            + TH2: data con là data cũ dưới db (đang được tracking) và data cha là data mới chưa có trong db. Khi bạn thay đổi object reference của data con
+                    trỏ đến reference của data cha mới thì khi gọi SaveChanges() EF sẽ tự động tracking data cha mới luôn => sinh ra cả lệnh insert data
+                    cha mới và lệnh update data con cũ.
+            + TH3: data cha là data cũ dưới db (đang được EF tracking), data con là data mới chưa con trong db. Khi bạn add data con mới vào navigation
+                    collection của data cha (không gọi Add() data con bằng dbContext) thì gọi SaveChanges() EF sẽ tự động tracking data con mới này =>
+                    sẽ sinh ra lệnh insert data con mới dưới db
+
         DeleteBehavior.NoAction: sinh ra dưới db FOREIGN KEY NO ACTION. Khác với những enum không có tiền tố Client khác, trường hợp này sẽ chặn ngay trên
             application nếu phát hiện ra data cha vẫn còn data con tham chiếu. Tức là ngày khi gọi lệnh remove nếu EF phát hiện ra vẫn còn data con chưa
             xóa thì sẽ quăng exception luôn, không thực hiện gọi lệnh dưới db.
