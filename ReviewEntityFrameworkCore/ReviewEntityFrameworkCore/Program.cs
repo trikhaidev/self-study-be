@@ -8,26 +8,26 @@ namespace ReviewEntityFrameworkCore
         static async Task Main(string[] args)
         {
             var context = new AppDbContext();
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
+            // context.Database.EnsureDeleted();
+            // context.Database.EnsureCreated();
 
-            
-            var author = context.Authors.First();
-            author.Name = "New name";
-            var newArticle = new Article
+            var a = new Article
             {
-                Title = "New hehe",
-                Description = "New hehe description",
-                Author = author
+              Title = "New bài viết",  
+              Description = "Ok bro!",
+              AuthorId = 3
             };
-            author.Articles = new List<Article>();
-            author.Articles.Add(newArticle);
+
+            context.Add(a);
             await context.SaveChangesAsync();
         }
     }
 
     /*
         EF: không có OnUpdate
+
+        Add(), AddAsync(), RemoveRange(), Remove(), Update(): không gọi db khi thực thi
+        => chỉ gọi Db khi SaveChanges() hoặc SaveChangesAsync()
 
         Giả sử bạn có 1 data con và 1 data cha. Sẽ có những Trường hợp sau:
             + TH1: cả 2 đều là data mới chưa có trong db. Bạn không gọi Add() cho data cha mà chỉ gọi Add() cho duy nhất data con => Khi Add() data con
@@ -83,6 +83,12 @@ namespace ReviewEntityFrameworkCore
                         con nào tham chiếu đến => sẽ gọi lệnh xóa như bth, còn việc có xóa được hay không thì sẽ phụ thuộc vào dữ liệu cũng như là ràng buộc 
                         thực tế dưới db
                 + Lưu ý: Nếu DbContext đang không theo dõi bất kỳ data con nào thì sẽ khi gọi lệnh xóa data cha sẽ rơi vào TH3.
-                
+        
+        Lưu ý: - EF không có tùy chọn SET DEFAULT như trong SQL Server.
+               - entity.Property(a => a.Id)
+                    .ValueGeneratedOnAdd() => EF hiểu rằng giá trị của cột này là do Db tự sinh nên khi insert nếu Entity không có giá trị (null) của cột
+                                            này thì câu lệnh insert được sinh ra sẽ không có cột này. Còn nếu Entity có giá trị (khác null) của cột này thì
+                                            câu lệnh insert sẽ kèm thêm cột này và giá trị của nó.  
+                    .UseIdentityColumn(100,5); => bắt đầu từ 100 và mỗi lần tăng lên 5 đơn vị
      */
 }

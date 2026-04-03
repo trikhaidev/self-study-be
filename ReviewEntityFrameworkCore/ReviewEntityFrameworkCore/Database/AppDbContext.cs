@@ -27,13 +27,23 @@ namespace ReviewEntityFrameworkCore.Database
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
             modelBuilder.Entity<Article>(entity =>
             {
+                entity.Property(a => a.Id)
+                    .ValueGeneratedOnAdd()
+                    .UseIdentityColumn(100,5);
+
+                entity.Property(a => a.Description)
+                    .HasMaxLength(500)
+                    .HasColumnType("NVARCHAR")
+                    .ValueGeneratedOnAdd();
+
                 entity.HasOne(a => a.Author)
                        .WithMany(au => au.Articles)
                        .HasForeignKey(a => a.AuthorId)
                        .IsRequired(true)
-                       .OnDelete(DeleteBehavior.ClientNoAction);
+                       .OnDelete(DeleteBehavior.ClientNoAction); // Chỉ rõ cho EF biết phải làm gì khi migrations Db và xóa data cha
             });
         }
     }
