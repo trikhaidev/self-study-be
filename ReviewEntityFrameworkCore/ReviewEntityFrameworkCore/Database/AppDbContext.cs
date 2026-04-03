@@ -37,7 +37,7 @@ namespace ReviewEntityFrameworkCore.Database
                 entity.Property(a => a.Description)
                     .HasMaxLength(500)
                     .HasColumnType("NVARCHAR")
-                    .ValueGeneratedOnAdd();
+                    .ValueGeneratedOnAddOrUpdate();
 
                 entity.HasOne(a => a.Author)
                        .WithMany(au => au.Articles)
@@ -48,3 +48,20 @@ namespace ReviewEntityFrameworkCore.Database
         }
     }
 }
+
+/*
+- UseIdentityColumn(100,5); => bắt đầu từ 100 và mỗi lần tăng lên 5 đơn vị
+
+- ValueGeneratedOnAdd() => EF hiểu rằng giá trị của cột này là do Db tự sinh nên khi INSERT nếu Entity không có giá trị (null) của cột
+                        này thì câu lệnh INSERT được sinh ra sẽ không có cột này. Còn nếu Entity có giá trị (khác null) của cột này thì
+                        câu lệnh INSERT sẽ kèm thêm cột này và giá trị của nó.
+                        => Khi INSERT xong thì EF sẽ map lại giá trị thực tế của cột này dưới db vào property của entity
+
+- ValueGeneratedOnUpdate() => Lệnh Update được sinh ra sẽ không bao gồm cột này. Dù cho đó có là entity đang được tracking hay không.
+                        => Khi UPDATE xong thì EF sẽ tự động đọc và map lại giá trị thực tế của cột này dưới db vào property của entity
+
+- ValueGeneratedOnAddOrUpdate() => Cả 2 lệnh INSERT và UPDATE sẽ không bao gồm cột này. Dù cho nó có value hay không, dù cho entity có đang được tracking
+                               hay không.
+                               => Tất nhiên là sau khi thực thi xong lệnh, EF sẽ tự động đọc và map lại giá trị thực tế của cột này dưới db vào property của
+                               entity
+*/

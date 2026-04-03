@@ -11,21 +11,23 @@ namespace ReviewEntityFrameworkCore
             // context.Database.EnsureDeleted();
             // context.Database.EnsureCreated();
 
-            var a = new Article
-            {
-              Title = "New bài viết",  
-              Description = "Ok bro!",
-              AuthorId = 3
-            };
+            // var a = new Article
+            // {
+            //     Title = "Sql Server 2022",
+            //     Description = "Learn about new features in SQL Server 2022, including performance improvements, security enhancements, and cloud integration capabilities.",
+            //     AuthorId = 20,
+            // };
+            // await context.AddAsync(a);
 
-            context.Add(a);
+            var a = context.Articles.First(x => x.Id == 375);
+            a.Title = "SQL Server 2022 - Updated Title!";
+            a.Description = "New content about lerning SQL Server 2022! This is updated description!";
+            a.AuthorId = 19;
             await context.SaveChangesAsync();
         }
     }
 
     /*
-        EF: không có OnUpdate
-
         Add(), AddAsync(), RemoveRange(), Remove(), Update(): không gọi db khi thực thi
         => chỉ gọi Db khi SaveChanges() hoặc SaveChangesAsync()
 
@@ -85,10 +87,8 @@ namespace ReviewEntityFrameworkCore
                 + Lưu ý: Nếu DbContext đang không theo dõi bất kỳ data con nào thì sẽ khi gọi lệnh xóa data cha sẽ rơi vào TH3.
         
         Lưu ý: - EF không có tùy chọn SET DEFAULT như trong SQL Server.
-               - entity.Property(a => a.Id)
-                    .ValueGeneratedOnAdd() => EF hiểu rằng giá trị của cột này là do Db tự sinh nên khi insert nếu Entity không có giá trị (null) của cột
-                                            này thì câu lệnh insert được sinh ra sẽ không có cột này. Còn nếu Entity có giá trị (khác null) của cột này thì
-                                            câu lệnh insert sẽ kèm thêm cột này và giá trị của nó.  
-                    .UseIdentityColumn(100,5); => bắt đầu từ 100 và mỗi lần tăng lên 5 đơn vị
+            - EF: không có OnUpdate
+
+        ------------------------------------ Vẫn còn ghi chú bên AppDbContext.cs ------------------------------------------------
      */
 }
