@@ -40,15 +40,21 @@ class Program
         //     }
         // });
 
+        // var task = new Task(async () =>
+        // {
+        //     while (!cts.IsCancellationRequested)
+        //     {
+        //         System.Console.WriteLine("Hello something");
+        //         // Thread.Sleep(1500);
+        //         await Task.Delay(1500, cts.Token);
+        //     }
+        // });
+
         var task = new Task(async () =>
         {
-            while (!cts.IsCancellationRequested)
-            {
-                System.Console.WriteLine("Hello something");
-                // Thread.Sleep(1500);
-                await Task.Delay(1500, cts.Token);
-            }
-        });
+            ExcuteSomeThing(cts.Token).Wait();
+            // await ExcuteSomeThing(cts.Token);
+        }, cts.Token);
         task.Start();
         while (!cts.IsCancellationRequested)
         {
