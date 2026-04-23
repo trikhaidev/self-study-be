@@ -17,19 +17,45 @@ class Program
     {
         var cts = new CancellationTokenSource();
         //cts.CancelAfter(5000);
-        var t1 = ExcuteSomeThing(cts.Token);
+        // var t1 = ExcuteSomeThing(cts.Token);
 
-        var ta = new Task<string>((title) =>
+        // var ta = new Task<string>((title) =>
+        // {
+        //     while (true)
+        //     {
+        //         System.Console.WriteLine(title);
+        //         Thread.Sleep(1000);
+        //     }
+        //     return "Done Task";
+        // },"Hello something", cts.Token);
+        // ta.Start();
+
+        // var task = Task.Run(async () =>
+        // {
+        //     while (!cts.IsCancellationRequested)
+        //     {
+        //         System.Console.WriteLine("Hello something");
+        //         // Thread.Sleep(1500);
+        //         await Task.Delay(1500, cts.Token);
+        //     }
+        // });
+
+        var task = new Task(async () =>
         {
-            while (true)
+            while (!cts.IsCancellationRequested)
             {
-                System.Console.WriteLine(title);
-                Thread.Sleep(1000);
+                System.Console.WriteLine("Hello something");
+                // Thread.Sleep(1500);
+                await Task.Delay(1500, cts.Token);
             }
-            return "Done Task";
-        },"Hello something", cts.Token);
-        ta.Start();
-
+        });
+        task.Start();
+        while (!cts.IsCancellationRequested)
+        {
+            System.Console.WriteLine("Doing something else...");
+            await Task.Delay(1000);
+        }
+        await task;
         Console.ReadLine();
         System.Console.WriteLine("Canceling...");
         cts.Cancel();
