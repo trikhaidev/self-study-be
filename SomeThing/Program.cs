@@ -52,8 +52,8 @@ class Program
 
         var task = new Task(async () =>
         {
-            ExcuteSomeThing(cts.Token).Wait();
-            // await ExcuteSomeThing(cts.Token);
+            // ExcuteSomeThing(cts.Token).Wait();
+            await ExcuteSomeThing(cts.Token);
         }, cts.Token);
         task.Start();
         while (!cts.IsCancellationRequested)
