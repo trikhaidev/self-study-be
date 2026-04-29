@@ -34,6 +34,9 @@ namespace ReviewEntityFrameworkCore.Database
                     .ValueGeneratedOnAdd()
                     .UseIdentityColumn(100,5);
 
+                entity.HasIndex(x => x.Title)
+                        .IsUnique(); // Việc thiếp lập Unique sẽ bao gồm luôn cả thiết lập Index
+
                 entity.Property(a => a.Description)
                     .HasMaxLength(500)
                     .HasColumnType("NVARCHAR")
@@ -51,6 +54,7 @@ namespace ReviewEntityFrameworkCore.Database
 
 /*
 - UseIdentityColumn(100,5); => bắt đầu từ 100 và mỗi lần tăng lên 5 đơn vị
+                            => thiết lập này không liên quan gì đến index hay unique
 
 - ValueGeneratedOnAdd() => EF hiểu rằng giá trị của cột này là do Db tự sinh nên khi INSERT nếu Entity không có giá trị (null) của cột
                         này thì câu lệnh INSERT được sinh ra sẽ không có cột này. Còn nếu Entity có giá trị (khác null) của cột này thì

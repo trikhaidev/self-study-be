@@ -9,7 +9,7 @@ namespace ReviewEntityFrameworkCore.Database
         [Key]
         public int Id { get; set; }
         [Required]
-        [MaxLength(500)]
+        [MaxLength(200)]
         [Column(TypeName = "NVARCHAR")]
         public string Title { get; set; } = null!;
 
