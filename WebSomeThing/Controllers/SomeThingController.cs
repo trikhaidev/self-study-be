@@ -6,16 +6,35 @@ namespace WebSomeThing.Controllers;
 public class SomeThingController : ControllerBase
 {
     [HttpGet]
-    public IActionResult Get()
+    public async IActionResult Get()
     {
-        Task.Run(async () =>
+        // Task.Run(async () =>
+        // {
+        //     while (true)
+        //     {
+        //         Console.WriteLine("Background Task is running...");
+        //         await Task.Delay(1000);
+        //     }
+        // });
+
+        // var thread = new Thread(() =>
+        // {
+        //     while (true)
+        //     {
+        //         Console.WriteLine("Background Thread is running...");
+        //         Thread.Sleep(1000);
+        //     }
+        // });
+        // thread.IsBackground = true;
+        //thread.Start();
+
+        var task = new Task<string>(() =>
         {
-            while (true)
-            {
-                Console.WriteLine("Background Task is running...");
-                await Task.Delay(1000);
-            }
+            return "Hello";
         });
+        task.Start();
+        task.Wait();
+        task.Result.ToString();
         return Ok("Hello world!");
     }
 }
