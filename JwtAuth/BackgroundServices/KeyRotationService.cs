@@ -7,10 +7,6 @@ namespace JwtAuth.BackgroundServices;
 
 public class KeyRotationService : BackgroundService
 {
-    static string _keyId = null!;
-    static byte[]? _privateKey = null;
-    public static byte[]? PrivateKey { get => _privateKey; }
-    public static string KeyId { get => _keyId; }
     readonly IServiceProvider serviceProvider;
     public KeyRotationService(IServiceProvider serviceProvider)
     {
@@ -55,4 +51,10 @@ public class KeyRotationService : BackgroundService
             await dbContext.SaveChangesAsync();
         }
     }
+
+    private static string _keyId = null!;
+    public static string KeyId { get => _keyId; }
+    
+    private static byte[] _privateKey = null!;
+    public static byte[] PrivateKey { get => _privateKey; }
 }
