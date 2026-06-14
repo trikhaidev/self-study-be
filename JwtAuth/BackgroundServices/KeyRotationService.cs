@@ -27,6 +27,11 @@ public class KeyRotationService : BackgroundService
         var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
+        if (string.IsNullOrWhiteSpace(KeyId) || PrivateKey == null || PrivateKey.Length == 0)
+        {
+            await dbContext.JwtKeys.Where(x => x.IsActive).ExecuteUpdateAsync(x => x.SetProperty(p => p.IsActive,false));
+        }
+
         var currentKey = await dbContext.JwtKeys.FirstOrDefaultAsync(x => x.IsActive);
         if (currentKey == null || currentKey.Exp <= DateTime.Now.AddMinutes(10))
         {

@@ -1,6 +1,7 @@
 
 using JwtAuth.BackgroundServices;
 using JwtAuth.Database;
+using JwtAuth.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace JwtAuth;
@@ -11,7 +12,11 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        builder.Services.AddOptions();
+        builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
+
         // Add services to the container.
+        builder.Services.AddScoped<IAuthService,AuthService>();
         builder.Services.AddDbContext<AppDbContext>(options =>
         {
             options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext"));
