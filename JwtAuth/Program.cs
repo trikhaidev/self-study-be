@@ -16,9 +16,12 @@ public class Program
 
         builder.Services.AddOptions();
         builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
+        builder.Services.Configure<HmacConfig>(builder.Configuration.GetSection("HmacConfig"));
 
         // Add services to the container.
         builder.Services.AddScoped<IAuthService,AuthService>();
+        builder.Services.AddScoped<ITokenManagerService, TokenManagerService>();
+
         builder.Services.AddDbContext<AppDbContext>(options =>
         {
             options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext"));

@@ -36,7 +36,7 @@ public class AuthController : ControllerBase
 
     [HttpGet("[Action]")]
     [Authorize]
-    public async Task<IActionResult> GetAccessTokenInfo()
+    public async Task<IActionResult> GetLoginInfo()
     {
         return Ok(new
         {

@@ -8,6 +8,7 @@ public class AppDbContext : DbContext
     public virtual DbSet<Role> Roles {get;set;}
     public virtual DbSet<UserRole> UserRoles {get;set;}
     public virtual DbSet<JwtKey> JwtKeys {get;set;}
+    public virtual DbSet<RefreshToken> RefreshTokens {get;set;}
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
@@ -29,6 +30,12 @@ public class AppDbContext : DbContext
         {
             entity.Property(x => x.IsActive)
                 .HasDefaultValue(false);
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.Property(x => x.IsActive)
+                    .HasDefaultValue(false);
         });
     }
 }
