@@ -1,4 +1,7 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using JwtAuth.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JwtAuth.Controllers;
@@ -29,5 +32,19 @@ public class AuthController : ControllerBase
                 Message = e.Message
             });
         }
+    }
+
+    [HttpGet("[Action]")]
+    [Authorize]
+    public async Task<IActionResult> GetAccessTokenInfo()
+    {
+        return Ok(new
+        {
+            TokenCode = User.FindFirstValue(JwtRegisteredClaimNames.Jti),
+            Exp = User.FindFirstValue(JwtRegisteredClaimNames.Exp),
+            userName = User.FindFirstValue(ClaimTypes.NameIdentifier),
+            email = User.FindFirstValue(ClaimTypes.Email),
+            Roles = User.FindAll(ClaimTypes.Role).Select(x => x.Value),
+        });
     }
 }

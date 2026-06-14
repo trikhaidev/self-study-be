@@ -13,6 +13,7 @@ namespace JwtAuth.Services;
 public interface IAuthService
 {
     Task<ResponseBaseModel<AuthServiceModel_Login>> Login(string userName, string passWord);
+    
     Task<string> GenerateAccessToken(User user, int? expires = null);
 }
 public class AuthService : IAuthService
