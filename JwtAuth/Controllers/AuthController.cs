@@ -38,12 +38,17 @@ public class AuthController : ControllerBase
     [HttpPut]
     [Route("/[Controller]")]
     [Route("[Action]")]
-    public async Task<IActionResult> RefreshSession([Required][FromHeader]string refreshToken)
+    public async Task<IActionResult> RefreshSession()
     {
         try
         {
+            if (!HttpContext.Request.Cookies.TryGetValue("refresh_token", out string? refreshToken)
+                || string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return Unauthorized();
+            };
 
-            var res = await authService.RefreshSession(refreshToken);
+            var res = await authService.RefreshSession(refreshToken, HttpContext.Response);
             return StatusCode(res.StatusCode,res);
         }
         catch(Exception e)

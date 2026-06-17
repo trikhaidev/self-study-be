@@ -14,7 +14,7 @@ public interface IAuthService
 {
     Task<ResponseBaseModel<AuthServiceModel_Login>> Login(string userName, string passWord, HttpResponse? response = null);
 
-    Task<ResponseBaseModel<AuthServiceModel_Login>> RefreshSession(string refreshToken);
+    Task<ResponseBaseModel<AuthServiceModel_Login>> RefreshSession(string refreshToken, HttpResponse? response = null);
 }
 public class AuthService : IAuthService
 {
@@ -67,7 +67,7 @@ public class AuthService : IAuthService
         return res;
     }
 
-    public async Task<ResponseBaseModel<AuthServiceModel_Login>> RefreshSession(string refreshToken)
+    public async Task<ResponseBaseModel<AuthServiceModel_Login>> RefreshSession(string refreshToken, HttpResponse? response)
     {
         var res = new ResponseBaseModel<AuthServiceModel_Login>();
         var user = await tokenManagerService.VerifyRefreshToken(refreshToken);
@@ -86,6 +86,18 @@ public class AuthService : IAuthService
         };
 
         await tokenManagerService.SaveRefreshToken(user,data.RefreshToken);
+
+        if (response != null)
+        {
+            response.Cookies.Append("refresh_token",data.RefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTime.UtcNow.AddDays(7),
+                Path = "/Auth/RefreshSession"
+            });
+        }
 
         res.StatusCode = 200;
         res.IsOk = true;
