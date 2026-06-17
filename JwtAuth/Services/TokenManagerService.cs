@@ -6,6 +6,7 @@ using JwtAuth.BackgroundServices;
 using JwtAuth.Database;
 using JwtAuth.Database.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -18,6 +19,8 @@ public interface ITokenManagerService
     Task<string> GenerateRefreshToken();
 
     Task SaveRefreshToken(User user, string refreshToken, int? expiresDate = null);
+
+    Task<User?> VerifyRefreshToken(string refreshToken);
 }
 public class TokenManagerService : ITokenManagerService
 {
@@ -95,11 +98,7 @@ public class TokenManagerService : ITokenManagerService
                 item.IsActive = false;
             }
         }
-        System.Console.WriteLine("Token raw: " + refreshToken);
-        var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(hmacConfig.refreshToken)!);
-        var computedByte = hmac.ComputeHash(Convert.FromBase64String(refreshToken));
-        var tokenHash = Convert.ToBase64String(computedByte);
-        System.Console.WriteLine("Token hash: " + tokenHash);
+        var tokenHash = HashData(refreshToken,hmacConfig.refreshToken);
         var data = new RefreshToken
         {
             UserId = user.Id,
@@ -111,5 +110,24 @@ public class TokenManagerService : ITokenManagerService
         dbContext.Add(data);
 
         await dbContext.SaveChangesAsync();
+    }
+
+    public async Task<User?> VerifyRefreshToken(string refreshToken)
+    {
+        var hashRefreshToken = HashData(refreshToken,hmacConfig.refreshToken);
+        var query = from rf in dbContext.RefreshTokens
+                    join u in dbContext.Users on rf.UserId equals u.Id
+                    where rf.IsActive
+                    && rf.Exp > DateTime.Now
+                    && rf.RefreshTokenHash == hashRefreshToken
+                    select u;
+        return await query.FirstOrDefaultAsync();
+    }
+
+    private string HashData(string plainText, string key)
+    {
+        var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key));
+        var hashByte = hmac.ComputeHash(Encoding.UTF8.GetBytes(plainText));
+        return Convert.ToBase64String(hashByte);
     }
 }

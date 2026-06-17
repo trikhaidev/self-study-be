@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using JwtAuth.Services;
@@ -20,7 +21,29 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var res = await authService.Login(model.UserName,model.Password);
+            var res = await authService.Login(model.UserName,model.Password, HttpContext.Response);
+            return StatusCode(res.StatusCode,res);
+        }
+        catch(Exception e)
+        {
+            return StatusCode(500, new ResponseBaseModel<object>
+            {
+                IsOk = false,
+                StatusCode = 500,
+                Message = e.Message
+            });
+        }
+    }
+
+    [HttpPut]
+    [Route("/[Controller]")]
+    [Route("[Action]")]
+    public async Task<IActionResult> RefreshSession([Required][FromHeader]string refreshToken)
+    {
+        try
+        {
+
+            var res = await authService.RefreshSession(refreshToken);
             return StatusCode(res.StatusCode,res);
         }
         catch(Exception e)
