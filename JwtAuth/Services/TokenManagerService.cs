@@ -20,6 +20,8 @@ public interface ITokenManagerService
 
     Task SaveRefreshToken(User user, string refreshToken, int? expiresDate = null);
 
+    Task<int> DeleteRefreshToken(string refreshToken);
+
     Task<User?> VerifyRefreshToken(string refreshToken);
 }
 public class TokenManagerService : ITokenManagerService
@@ -110,6 +112,19 @@ public class TokenManagerService : ITokenManagerService
         dbContext.Add(data);
 
         await dbContext.SaveChangesAsync();
+    }
+
+    public async Task<int> DeleteRefreshToken(string refreshToken)
+    {
+        var tokenHash = HashData(refreshToken,hmacConfig.refreshToken);
+        var tokenExis = await dbContext.RefreshTokens.Where(x => x.RefreshTokenHash == tokenHash && x.IsActive)
+                            .ToListAsync();
+        foreach (var item in tokenExis)
+        {
+            item.IsActive = false;
+        }
+
+        return await dbContext.SaveChangesAsync();
     }
 
     public async Task<User?> VerifyRefreshToken(string refreshToken)

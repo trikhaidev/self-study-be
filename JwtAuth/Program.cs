@@ -1,6 +1,7 @@
 
 using JwtAuth.BackgroundServices;
 using JwtAuth.Database;
+using JwtAuth.Middlewares;
 using JwtAuth.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +31,7 @@ public class Program
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
         builder.Services.AddHostedService<KeyRotationService>();
-
+        builder.Services.AddMemoryCache();
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                         .AddJwtBearer(options =>
                         {
@@ -49,7 +50,7 @@ public class Program
                                 ClockSkew = TimeSpan.Zero, // không cho phép độ trễ
 
                                 RequireSignedTokens = true, // Đảm bảo phải được kí xác thực
-
+                                ValidateIssuerSigningKey = true, // Đảm bảo chứ kí phải đúng
                                 // Sử lấy thông tin xác thức chữ kí token
                                 IssuerSigningKeyResolver = (token, securityToken, kid, validationParameters) =>
                                 {
@@ -72,6 +73,7 @@ public class Program
 
         app.UseHttpsRedirection();
 
+        app.UseAccessTokenBlocking();
         app.UseAuthentication();
         app.UseAuthorization();
 

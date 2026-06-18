@@ -5,7 +5,9 @@ using JwtAuth.BackgroundServices;
 using JwtAuth.Database;
 using JwtAuth.Database.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 
 namespace JwtAuth.Services;
@@ -15,16 +17,24 @@ public interface IAuthService
     Task<ResponseBaseModel<AuthServiceModel_Login>> Login(string userName, string passWord, HttpResponse? response = null);
 
     Task<ResponseBaseModel<AuthServiceModel_Login>> RefreshSession(string refreshToken, HttpResponse? response = null);
+
+    Task<ResponseBaseModel<string>> Logout(HttpRequest request);
+
+    void SetRefreshTokenCookie(string refreshToken, HttpResponse response);
 }
 public class AuthService : IAuthService
 {
-    public AuthService(AppDbContext dbContext, ITokenManagerService tokenManagerService)
+    public AuthService(AppDbContext dbContext, ITokenManagerService tokenManagerService, IMemoryCache memoryCache, IOptions<JwtConfig> jwtConfigOptions)
     {
         this.dbContext = dbContext;
         this.tokenManagerService = tokenManagerService;
+        this.memoryCache = memoryCache;
+        this.jwtConfig = jwtConfigOptions.Value;
     }
     readonly AppDbContext dbContext;
     readonly ITokenManagerService tokenManagerService;
+    readonly IMemoryCache memoryCache;
+    readonly JwtConfig jwtConfig;
 
     public async Task<ResponseBaseModel<AuthServiceModel_Login>> Login(string userName, string passWord, HttpResponse? response = null)
     {
@@ -46,18 +56,11 @@ public class AuthService : IAuthService
             RefreshToken = await tokenManagerService.GenerateRefreshToken()
         };
 
-        await tokenManagerService.SaveRefreshToken(user,data.RefreshToken);
+        await tokenManagerService.SaveRefreshToken(user, data.RefreshToken);
 
         if (response != null)
         {
-            response.Cookies.Append("refresh_token",data.RefreshToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax,
-                Path = "/Auth/RefreshSession",
-                Expires = DateTimeOffset.UtcNow.AddDays(30)
-            });
+            SetRefreshTokenCookie(data.RefreshToken, response);
         }
 
         res.IsOk = true;
@@ -85,18 +88,11 @@ public class AuthService : IAuthService
             RefreshToken = await tokenManagerService.GenerateRefreshToken()
         };
 
-        await tokenManagerService.SaveRefreshToken(user,data.RefreshToken);
+        await tokenManagerService.SaveRefreshToken(user, data.RefreshToken);
 
         if (response != null)
         {
-            response.Cookies.Append("refresh_token",data.RefreshToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTime.UtcNow.AddDays(7),
-                Path = "/Auth/RefreshSession"
-            });
+            SetRefreshTokenCookie(data.RefreshToken, response);
         }
 
         res.StatusCode = 200;
@@ -104,5 +100,58 @@ public class AuthService : IAuthService
         res.Message = "Làm mới phiên làm việc thành công";
         res.Data = data;
         return res;
+    }
+
+    public async Task<ResponseBaseModel<string>> Logout(HttpRequest request)
+    {
+        var res = new ResponseBaseModel<string>();
+        if (!request.Headers.TryGetValue("Authorization", out StringValues authHeader))
+        {
+            res.StatusCode = 401;
+            res.IsOk = false;
+            res.Message = "Vui lòng đăng nhập!";
+            return res;
+        }
+
+        var token = authHeader.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            res.StatusCode = 401;
+            res.IsOk = false;
+            res.Message = "Vui lòng đăng nhập!";
+            return res;
+        }
+
+        token = token.Substring("Bearer ".Length);
+        memoryCache.Set(token, true, new MemoryCacheEntryOptions
+        {
+            SlidingExpiration = TimeSpan.FromMinutes(jwtConfig.Expires),
+            Priority = CacheItemPriority.High
+        });
+
+        if (request.Cookies.TryGetValue("refresh_token", out var refreshToken))
+        {
+            if (!string.IsNullOrWhiteSpace(refreshToken))
+            {
+                await tokenManagerService.DeleteRefreshToken(refreshToken);
+            }
+        }
+
+        res.StatusCode = 200;
+        res.IsOk = true;
+        res.Message = "Đăng xuất thành công";
+        return res;
+    }
+
+    public void SetRefreshTokenCookie(string refreshToken, HttpResponse response)
+    {
+        response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddDays(7),
+            Path = "/Auth/Session"
+        });
     }
 }

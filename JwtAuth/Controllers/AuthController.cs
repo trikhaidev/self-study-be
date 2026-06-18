@@ -36,8 +36,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPut]
-    [Route("/[Controller]")]
-    [Route("[Action]")]
+    [Route("Session/[Action]")]
     public async Task<IActionResult> RefreshSession()
     {
         try
@@ -49,6 +48,27 @@ public class AuthController : ControllerBase
             };
 
             var res = await authService.RefreshSession(refreshToken, HttpContext.Response);
+            return StatusCode(res.StatusCode,res);
+        }
+        catch(Exception e)
+        {
+            return StatusCode(500, new ResponseBaseModel<object>
+            {
+                IsOk = false,
+                StatusCode = 500,
+                Message = e.Message
+            });
+        }
+    }
+
+    [HttpDelete]
+    [Authorize]
+    [Route("Session/[Action]")]
+    public async Task<IActionResult> Logout()
+    {
+        try
+        {
+            var res = await authService.Logout(HttpContext.Request);
             return StatusCode(res.StatusCode,res);
         }
         catch(Exception e)
