@@ -18,7 +18,7 @@ public interface IAuthService
 
     Task<ResponseBaseModel<AuthServiceModel_Login>> RefreshSession(string refreshToken, HttpResponse? response = null);
 
-    Task<ResponseBaseModel<string>> Logout(HttpRequest request);
+    Task<ResponseBaseModel<string>> Logout(HttpRequest request, HttpResponse response);
 
     void SetRefreshTokenCookie(string refreshToken, HttpResponse response);
 }
@@ -102,7 +102,7 @@ public class AuthService : IAuthService
         return res;
     }
 
-    public async Task<ResponseBaseModel<string>> Logout(HttpRequest request)
+    public async Task<ResponseBaseModel<string>> Logout(HttpRequest request, HttpResponse response)
     {
         var res = new ResponseBaseModel<string>();
         if (!request.Headers.TryGetValue("Authorization", out StringValues authHeader))
@@ -135,6 +135,11 @@ public class AuthService : IAuthService
             {
                 await tokenManagerService.DeleteRefreshToken(refreshToken);
             }
+
+            response.Cookies.Delete("refresh_token",new CookieOptions
+            {
+                Path = "/Auth/Session"
+            });
         }
 
         res.StatusCode = 200;

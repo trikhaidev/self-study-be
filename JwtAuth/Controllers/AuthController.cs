@@ -68,7 +68,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var res = await authService.Logout(HttpContext.Request);
+            var res = await authService.Logout(HttpContext.Request, HttpContext.Response);
             return StatusCode(res.StatusCode,res);
         }
         catch(Exception e)
