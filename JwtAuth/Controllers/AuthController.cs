@@ -41,13 +41,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            if (!HttpContext.Request.Cookies.TryGetValue("refresh_token", out string? refreshToken)
-                || string.IsNullOrWhiteSpace(refreshToken))
-            {
-                return Unauthorized();
-            };
-
-            var res = await authService.RefreshSession(refreshToken, HttpContext.Response);
+            var res = await authService.RefreshSession(HttpContext.Request, HttpContext.Response);
             return StatusCode(res.StatusCode,res);
         }
         catch(Exception e)

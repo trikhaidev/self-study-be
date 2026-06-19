@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using JwtAuth.BackgroundServices;
 using JwtAuth.Database;
 using JwtAuth.Database.Entities;
+using JwtAuth.Services.options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
@@ -16,7 +17,7 @@ public interface IAuthService
 {
     Task<ResponseBaseModel<AuthServiceModel_Login>> Login(string userName, string passWord, HttpResponse? response = null);
 
-    Task<ResponseBaseModel<AuthServiceModel_Login>> RefreshSession(string refreshToken, HttpResponse? response = null);
+    Task<ResponseBaseModel<AuthServiceModel_Login>> RefreshSession(HttpRequest request, HttpResponse? response = null);
 
     Task<ResponseBaseModel<string>> Logout(HttpRequest request, HttpResponse response);
 
@@ -24,17 +25,23 @@ public interface IAuthService
 }
 public class AuthService : IAuthService
 {
-    public AuthService(AppDbContext dbContext, ITokenManagerService tokenManagerService, IMemoryCache memoryCache, IOptions<JwtConfig> jwtConfigOptions)
+    public AuthService(AppDbContext dbContext,
+        ITokenManagerService tokenManagerService,
+        IMemoryCache memoryCache,
+        IOptions<JwtConfig> jwtConfigOptions,
+        IOptions<RefreshTokenConfig> refreshTokenConfigOptions)
     {
         this.dbContext = dbContext;
         this.tokenManagerService = tokenManagerService;
         this.memoryCache = memoryCache;
         this.jwtConfig = jwtConfigOptions.Value;
+        this.refreshTokenConfig = refreshTokenConfigOptions.Value;
     }
     readonly AppDbContext dbContext;
     readonly ITokenManagerService tokenManagerService;
     readonly IMemoryCache memoryCache;
     readonly JwtConfig jwtConfig;
+    readonly RefreshTokenConfig refreshTokenConfig;
 
     public async Task<ResponseBaseModel<AuthServiceModel_Login>> Login(string userName, string passWord, HttpResponse? response = null)
     {
@@ -70,9 +77,19 @@ public class AuthService : IAuthService
         return res;
     }
 
-    public async Task<ResponseBaseModel<AuthServiceModel_Login>> RefreshSession(string refreshToken, HttpResponse? response)
+    public async Task<ResponseBaseModel<AuthServiceModel_Login>> RefreshSession(HttpRequest request, HttpResponse? response)
     {
         var res = new ResponseBaseModel<AuthServiceModel_Login>();
+
+        if (!request.Cookies.TryGetValue(refreshTokenConfig.Key, out string? refreshToken)
+                || string.IsNullOrWhiteSpace(refreshToken))
+        {
+            res.StatusCode = 401;
+            res.IsOk = false;
+            res.Message = "Phiên làm việc hết hạn! Vui lòng đăng nhập lại!";
+            return res;
+        }
+
         var user = await tokenManagerService.VerifyRefreshToken(refreshToken);
         if (user == null)
         {
@@ -129,16 +146,16 @@ public class AuthService : IAuthService
             Priority = CacheItemPriority.High
         });
 
-        if (request.Cookies.TryGetValue("refresh_token", out var refreshToken))
+        if (request.Cookies.TryGetValue(refreshTokenConfig.Key, out var refreshToken))
         {
             if (!string.IsNullOrWhiteSpace(refreshToken))
             {
                 await tokenManagerService.DeleteRefreshToken(refreshToken);
             }
 
-            response.Cookies.Delete("refresh_token",new CookieOptions
+            response.Cookies.Delete(refreshTokenConfig.Key, new CookieOptions
             {
-                Path = "/Auth/Session"
+                Path = refreshTokenConfig.Path
             });
         }
 
@@ -150,13 +167,13 @@ public class AuthService : IAuthService
 
     public void SetRefreshTokenCookie(string refreshToken, HttpResponse response)
     {
-        response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
+        response.Cookies.Append(refreshTokenConfig.Key, refreshToken, new CookieOptions
         {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Lax,
-            Expires = DateTimeOffset.UtcNow.AddDays(7),
-            Path = "/Auth/Session"
+            HttpOnly = refreshTokenConfig.HttpOnly,
+            Secure = refreshTokenConfig.Secure,
+            SameSite = (SameSiteMode)refreshTokenConfig.SameSite,
+            Expires = DateTimeOffset.UtcNow.AddDays(refreshTokenConfig.ExpiressDay),
+            Path = refreshTokenConfig.Path
         });
     }
 }

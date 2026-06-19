@@ -3,6 +3,7 @@ using JwtAuth.BackgroundServices;
 using JwtAuth.Database;
 using JwtAuth.Middlewares;
 using JwtAuth.Services;
+using JwtAuth.Services.options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -18,6 +19,7 @@ public class Program
         builder.Services.AddOptions();
         builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
         builder.Services.Configure<HmacConfig>(builder.Configuration.GetSection("HmacConfig"));
+        builder.Services.Configure<RefreshTokenConfig>(builder.Configuration.GetSection("RefreshToken"));
 
         // Add services to the container.
         builder.Services.AddScoped<IAuthService,AuthService>();
