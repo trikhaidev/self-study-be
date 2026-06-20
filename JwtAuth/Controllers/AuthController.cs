@@ -35,6 +35,26 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpPost]
+    [Route("[Action]")]
+    public async Task<IActionResult> Register([Required][FromBody]AuthRequestModel_Register request)
+    {
+        try
+        {
+            var res = await authService.Register(request);
+            return StatusCode(res.StatusCode, res);
+        }
+        catch(Exception e)
+        {
+            return StatusCode(500, new ResponseBaseModel<object>
+            {
+                IsOk = false,
+                StatusCode = 500,
+                Message = e.Message
+            });
+        }
+    }
+
     [HttpPut]
     [Route("Session/[Action]")]
     public async Task<IActionResult> RefreshSession()

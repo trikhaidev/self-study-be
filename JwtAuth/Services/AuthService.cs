@@ -17,6 +17,8 @@ public interface IAuthService
 {
     Task<ResponseBaseModel<AuthServiceModel_Login>> Login(string userName, string passWord, HttpResponse? response = null);
 
+    Task<ResponseBaseModel<int>> Register(AuthRequestModel_Register request);
+
     Task<ResponseBaseModel<AuthServiceModel_Login>> RefreshSession(HttpRequest request, HttpResponse? response = null);
 
     Task<ResponseBaseModel<string>> Logout(HttpRequest request, HttpResponse response);
@@ -29,19 +31,22 @@ public class AuthService : IAuthService
         ITokenManagerService tokenManagerService,
         IMemoryCache memoryCache,
         IOptions<JwtConfig> jwtConfigOptions,
-        IOptions<RefreshTokenConfig> refreshTokenConfigOptions)
+        IOptions<RefreshTokenConfig> refreshTokenConfigOptions,
+        IOptions<HmacConfig> hmaConfigOptions)
     {
         this.dbContext = dbContext;
         this.tokenManagerService = tokenManagerService;
         this.memoryCache = memoryCache;
         this.jwtConfig = jwtConfigOptions.Value;
         this.refreshTokenConfig = refreshTokenConfigOptions.Value;
+        this.hmacConfig = hmaConfigOptions.Value;
     }
     readonly AppDbContext dbContext;
     readonly ITokenManagerService tokenManagerService;
     readonly IMemoryCache memoryCache;
     readonly JwtConfig jwtConfig;
     readonly RefreshTokenConfig refreshTokenConfig;
+    readonly HmacConfig hmacConfig;
 
     public async Task<ResponseBaseModel<AuthServiceModel_Login>> Login(string userName, string passWord, HttpResponse? response = null)
     {
@@ -74,6 +79,36 @@ public class AuthService : IAuthService
         res.StatusCode = 200;
         res.Message = "Đăng nhập thành công";
         res.Data = data;
+        return res;
+    }
+
+    public async Task<ResponseBaseModel<int>> Register(AuthRequestModel_Register request)
+    {
+        var res = new ResponseBaseModel<int>();
+        request.Username = request.Username.Trim();
+        request.Password = request.Password.Trim();
+        request.Email = request.Email?.Trim();
+        if (await dbContext.Users.AnyAsync(x => x.Username == request.Username))
+        {
+            res.StatusCode = 400;
+            res.Message = "Username đã tồn tại!";
+            return res;
+        }
+
+        var data = new User
+        {
+            Username = request.Username,
+            Password = GlobalStaticService.HashData(request.Password, hmacConfig.password),
+            Email = request.Email,
+            DateOfBirth = request.DateOfBirth
+        };
+
+        dbContext.Add(data);
+
+        res.Data = await dbContext.SaveChangesAsync();
+        res.StatusCode = 201;
+        res.IsOk = true;
+        res.Message = "Đăng kí thành công";
         return res;
     }
 
