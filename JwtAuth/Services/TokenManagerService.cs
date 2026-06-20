@@ -100,7 +100,7 @@ public class TokenManagerService : ITokenManagerService
                 item.IsActive = false;
             }
         }
-        var tokenHash = HashData(refreshToken,hmacConfig.refreshToken);
+        var tokenHash = GlobalStaticService.HashData(refreshToken,hmacConfig.refreshToken);
         var data = new RefreshToken
         {
             UserId = user.Id,
@@ -116,7 +116,7 @@ public class TokenManagerService : ITokenManagerService
 
     public async Task<int> DeleteRefreshToken(string refreshToken)
     {
-        var tokenHash = HashData(refreshToken,hmacConfig.refreshToken);
+        var tokenHash = GlobalStaticService.HashData(refreshToken,hmacConfig.refreshToken);
         var tokenExis = await dbContext.RefreshTokens.Where(x => x.RefreshTokenHash == tokenHash && x.IsActive)
                             .ToListAsync();
         foreach (var item in tokenExis)
@@ -129,7 +129,7 @@ public class TokenManagerService : ITokenManagerService
 
     public async Task<User?> VerifyRefreshToken(string refreshToken)
     {
-        var hashRefreshToken = HashData(refreshToken,hmacConfig.refreshToken);
+        var hashRefreshToken = GlobalStaticService.HashData(refreshToken,hmacConfig.refreshToken);
         var query = from rf in dbContext.RefreshTokens
                     join u in dbContext.Users on rf.UserId equals u.Id
                     where rf.IsActive
@@ -137,12 +137,5 @@ public class TokenManagerService : ITokenManagerService
                     && rf.RefreshTokenHash == hashRefreshToken
                     select u;
         return await query.FirstOrDefaultAsync();
-    }
-
-    private string HashData(string plainText, string key)
-    {
-        var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key));
-        var hashByte = hmac.ComputeHash(Encoding.UTF8.GetBytes(plainText));
-        return Convert.ToBase64String(hashByte);
     }
 }
