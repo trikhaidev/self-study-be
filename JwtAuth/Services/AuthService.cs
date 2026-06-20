@@ -51,9 +51,10 @@ public class AuthService : IAuthService
     public async Task<ResponseBaseModel<AuthServiceModel_Login>> Login(string userName, string passWord, HttpResponse? response = null)
     {
         var res = new ResponseBaseModel<AuthServiceModel_Login>();
+        var hashPasword = GlobalStaticService.HashData(passWord, hmacConfig.password);
         var user = await dbContext.Users
                     .FirstOrDefaultAsync(x => x.Username == userName
-                                            && x.Password == passWord);
+                                            && x.Password == hashPasword);
         if (user == null)
         {
             res.IsOk = false;
