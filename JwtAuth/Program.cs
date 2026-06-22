@@ -69,10 +69,10 @@ public class Program
         {
             options.AddPolicy("react", policy =>
             {
+                policy.WithOrigins(builder.Configuration.GetSection("Cors").GetSection("Origin").Get<string[]>()!);
                 policy.AllowAnyMethod();
                 policy.AllowAnyHeader();
-                policy.WithOrigins(builder.Configuration.GetSection("Cors").GetSection("Origin").Get<string[]>()!);
-                policy.SetPreflightMaxAge(TimeSpan.FromMinutes(30));
+                policy.SetPreflightMaxAge(TimeSpan.FromMinutes(15));
             });
         });
 
