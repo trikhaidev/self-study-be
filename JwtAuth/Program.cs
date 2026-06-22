@@ -72,6 +72,7 @@ public class Program
                 policy.WithOrigins(builder.Configuration.GetSection("Cors").GetSection("Origin").Get<string[]>()!);
                 policy.AllowAnyMethod();
                 policy.AllowAnyHeader();
+                policy.AllowCredentials();
                 policy.SetPreflightMaxAge(TimeSpan.FromMinutes(15));
             });
         });
