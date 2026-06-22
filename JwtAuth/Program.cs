@@ -65,6 +65,17 @@ public class Program
                             };
                         });
 
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("react", policy =>
+            {
+                policy.AllowAnyMethod();
+                policy.AllowAnyHeader();
+                policy.WithOrigins(builder.Configuration.GetSection("Cors").GetSection("Origin").Get<string[]>()!);
+                policy.SetPreflightMaxAge(TimeSpan.FromMinutes(30));
+            });
+        });
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -76,6 +87,9 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAccessTokenBlocking();
+
+        app.UseCors("react");
+
         app.UseAuthentication();
         app.UseAuthorization();
 
