@@ -65,6 +65,7 @@ public class AuthService : IAuthService
 
         var data = new AuthServiceModel_Login
         {
+            UserName = userName,
             AccessToken = await tokenManagerService.GenerateAccessToken(user),
             RefreshToken = await tokenManagerService.GenerateRefreshToken()
         };
@@ -137,6 +138,7 @@ public class AuthService : IAuthService
 
         var data = new AuthServiceModel_Login
         {
+            UserName = user.Username,
             AccessToken = await tokenManagerService.GenerateAccessToken(user),
             RefreshToken = await tokenManagerService.GenerateRefreshToken()
         };
