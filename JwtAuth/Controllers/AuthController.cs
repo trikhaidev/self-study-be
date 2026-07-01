@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JwtAuth.Controllers;
+
 [ApiController]
 [Route("[Controller]")]
 public class AuthController : ControllerBase
@@ -17,14 +18,14 @@ public class AuthController : ControllerBase
     readonly IAuthService authService;
 
     [HttpPost]
-    public async Task<IActionResult> Login([FromBody]AuthRequestModel_Login model)
+    public async Task<IActionResult> Login([FromBody] AuthRequestModel_Login model)
     {
         try
         {
-            var res = await authService.Login(model.UserName,model.Password, HttpContext.Response);
-            return StatusCode(res.StatusCode,res);
+            var res = await authService.Login(model.UserName, model.Password, HttpContext.Response);
+            return StatusCode(res.StatusCode, res);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             return StatusCode(500, new ResponseBaseModel<object>
             {
@@ -37,14 +38,14 @@ public class AuthController : ControllerBase
 
     [HttpPost]
     [Route("[Action]")]
-    public async Task<IActionResult> Register([Required][FromBody]AuthRequestModel_Register request)
+    public async Task<IActionResult> Register([Required][FromBody] AuthRequestModel_Register request)
     {
         try
         {
             var res = await authService.Register(request);
             return StatusCode(res.StatusCode, res);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             return StatusCode(500, new ResponseBaseModel<object>
             {
@@ -62,9 +63,9 @@ public class AuthController : ControllerBase
         try
         {
             var res = await authService.RefreshSession(HttpContext.Request, HttpContext.Response);
-            return StatusCode(res.StatusCode,res);
+            return StatusCode(res.StatusCode, res);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             return StatusCode(500, new ResponseBaseModel<object>
             {
@@ -83,9 +84,9 @@ public class AuthController : ControllerBase
         try
         {
             var res = await authService.Logout(HttpContext.Request, HttpContext.Response);
-            return StatusCode(res.StatusCode,res);
+            return StatusCode(res.StatusCode, res);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             return StatusCode(500, new ResponseBaseModel<object>
             {
@@ -100,13 +101,18 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetLoginInfo()
     {
-        return Ok(new
+        return Ok(new ResponseBaseModel<object>
         {
-            TokenCode = User.FindFirstValue(JwtRegisteredClaimNames.Jti),
-            Exp = User.FindFirstValue(JwtRegisteredClaimNames.Exp),
-            userName = User.FindFirstValue(ClaimTypes.NameIdentifier),
-            email = User.FindFirstValue(ClaimTypes.Email),
-            Roles = User.FindAll(ClaimTypes.Role).Select(x => x.Value),
+            StatusCode = 200,
+            IsOk = true,
+            Data = new
+            {
+                TokenCode = User.FindFirstValue(JwtRegisteredClaimNames.Jti),
+                Exp = User.FindFirstValue(JwtRegisteredClaimNames.Exp),
+                userName = User.FindFirstValue(ClaimTypes.NameIdentifier),
+                email = User.FindFirstValue(ClaimTypes.Email),
+                Roles = User.FindAll(ClaimTypes.Role).Select(x => x.Value),
+            }
         });
     }
 }
