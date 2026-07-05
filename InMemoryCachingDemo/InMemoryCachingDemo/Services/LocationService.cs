@@ -48,7 +48,11 @@ namespace InMemoryCachingDemo.Services
             data.NameOfVietNamese = NameOfVietnamese.Trim();
             await dbContext.SaveChangesAsync();
             cache.Remove("countries");
-            cache.Remove($"country_{Id}");
+            cache.Set($"country_{Id}",data, new MemoryCacheEntryOptions
+            {
+                SlidingExpiration = TimeSpan.FromSeconds(15),
+                Priority = CacheItemPriority.High
+            });
             return true;
         }
 
