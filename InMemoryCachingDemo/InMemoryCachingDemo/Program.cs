@@ -18,6 +18,7 @@ namespace InMemoryCachingDemo
             });
             builder.Services.AddMemoryCache();
             builder.Services.AddScoped<ILocationService, LocationService>();
+            builder.Services.AddScoped<ICacheManagerService, CacheManagerService>();
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();

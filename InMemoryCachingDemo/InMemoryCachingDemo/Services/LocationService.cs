@@ -16,9 +16,9 @@ namespace InMemoryCachingDemo.Services
     public class LocationService : ILocationService
     {
         readonly AppDbContext dbContext;
-        readonly IMemoryCache cache;
+        readonly ICacheManagerService cache;
         public LocationService(AppDbContext dbContext,
-                                IMemoryCache cache)
+                                ICacheManagerService cache)
         {
             this.dbContext = dbContext;
             this.cache = cache;
