@@ -22,6 +22,7 @@ public class CacheManagerService : ICacheManagerService
     public CacheManagerService(IMemoryCache cache)
     {
         this.cache = cache;
+        Console.WriteLine("Memory cache: "+cache.GetHashCode());
     }
 
     public T? Set<T>(string key, T value, MemoryCacheEntryOptions options)
