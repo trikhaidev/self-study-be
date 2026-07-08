@@ -2,6 +2,7 @@
 using InMemoryCachingDemo.Database;
 using InMemoryCachingDemo.Services;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace InMemoryCachingDemo
 {
@@ -19,6 +20,12 @@ namespace InMemoryCachingDemo
             builder.Services.AddMemoryCache();
             builder.Services.AddScoped<ILocationService, LocationService>();
             builder.Services.AddSingleton<ICacheManagerService, CacheManagerService>();
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = builder.Configuration.GetSection("RedisOptions").GetSection("Configuration").Get<string>();
+                options.InstanceName = builder.Configuration.GetSection("RedisOptions").GetSection("InstanceName").Get<string>();
+            });
+            builder.Services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(builder.Configuration.GetSection("RedisOptions").GetSection("Configuration").Value!));
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
