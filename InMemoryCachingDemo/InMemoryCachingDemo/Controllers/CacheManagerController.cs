@@ -1,5 +1,6 @@
 using InMemoryCachingDemo.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace InMemoryCachingDemo.Controllers;
 
@@ -28,8 +29,9 @@ public class CacheManagerController : ControllerBase
     }
 
     [HttpDelete]
-    public IActionResult Remove()
+    public IActionResult Remove([FromQuery][Required]string key)
     {
-        
+        cache.Remove(key);
+        return Ok();
     }
 }

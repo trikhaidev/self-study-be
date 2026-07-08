@@ -50,7 +50,7 @@ namespace InMemoryCachingDemo.Services
             cache.Remove("countries");
             cache.Set($"country_{Id}",data, new MemoryCacheEntryOptions
             {
-                SlidingExpiration = TimeSpan.FromSeconds(15),
+                SlidingExpiration = TimeSpan.FromMinutes(15),
                 Priority = CacheItemPriority.High
             });
             return true;
@@ -65,7 +65,7 @@ namespace InMemoryCachingDemo.Services
                 if (data.Any())
                 {
                     var cacheOptions = new MemoryCacheEntryOptions()
-                                        .SetSlidingExpiration(TimeSpan.FromSeconds(15))
+                                        .SetSlidingExpiration(TimeSpan.FromMinutes(15))
                                         .SetPriority(CacheItemPriority.High);
                     cache.Set(cacheKey,data,cacheOptions);
                 }
@@ -84,7 +84,7 @@ namespace InMemoryCachingDemo.Services
                     cache.Set(cacheKey,data, new MemoryCacheEntryOptions
                     {
                         Priority = CacheItemPriority.High,
-                        SlidingExpiration = TimeSpan.FromSeconds(15)
+                        SlidingExpiration = TimeSpan.FromMinutes(15)
                     });
                 }
             }
@@ -100,7 +100,7 @@ namespace InMemoryCachingDemo.Services
                 if (data.Any())
                 {
                     var cacheOptions = new MemoryCacheEntryOptions()
-                                        .SetAbsoluteExpiration(TimeSpan.FromSeconds(15))
+                                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(15))
                                         .SetPriority(CacheItemPriority.Low);
                     cache.Set(cacheKey,data,cacheOptions);
                 }
