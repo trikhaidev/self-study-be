@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
+using StackExchange.Redis;
 
 namespace InMemoryCachingDemo.Controllers
 {
@@ -14,10 +15,15 @@ namespace InMemoryCachingDemo.Controllers
     {
         readonly IRedisManagerService cache;
         readonly AppDbContext dbContext;
-        public LocationRedisController(IRedisManagerService cache, AppDbContext dbContext)
+        readonly IConnectionMultiplexer connection;
+        public LocationRedisController(
+            IRedisManagerService cache,
+            IConnectionMultiplexer connection, 
+            AppDbContext dbContext)
         {
             this.cache = cache;
             this.dbContext = dbContext;
+            this.connection = connection;
         }
 
         [HttpGet]
@@ -36,6 +42,15 @@ namespace InMemoryCachingDemo.Controllers
                 }
             }
             return Ok(data);
+        }
+
+        [HttpGet]
+        public IActionResult GetAllKeys()
+        {
+            var endpoint = connection.GetEndPoints().First();
+            var server = connection.GetServer(endpoint);
+            var keys = server.Keys().ToList();
+            return Ok(keys.Select(x => x.ToString().Replace("Test","")));
         }
     }
 }
