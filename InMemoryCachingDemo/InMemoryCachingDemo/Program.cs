@@ -26,6 +26,7 @@ namespace InMemoryCachingDemo
                 options.InstanceName = builder.Configuration.GetSection("RedisOptions").GetSection("InstanceName").Get<string>();
             });
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(builder.Configuration.GetSection("RedisOptions").GetSection("Configuration").Value!));
+            builder.Services.AddScoped<IRedisManagerService, RedisManagerService>();
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
