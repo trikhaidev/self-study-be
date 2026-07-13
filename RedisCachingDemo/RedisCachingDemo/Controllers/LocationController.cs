@@ -59,5 +59,44 @@ namespace RedisCachingDemo.Controllers
             }
             return Ok(data);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCities()
+        {
+            string key = "cities";
+            var data = await cache.TryGetValue<List<City>>(key);
+            if (data == null || !data.Any())
+            {
+                data = await dbContext.Cities.AsNoTracking().ToListAsync();
+                if (data.Any())
+                {
+                    await cache.Set(key, data, new DistributedCacheEntryOptions
+                    {
+                        SlidingExpiration = TimeSpan.FromMinutes(30)
+                    });
+                }
+            }
+            return Ok(data);
+        }
+
+        [HttpGet]
+        [Route("{Id:int:required:min(1)}")]
+        public async Task<IActionResult> GetCitiesByCountryId([FromRoute][Required] int Id)
+        {
+            var key = $"country_{Id}_cities";
+            var data = await cache.TryGetValue<List<City>>(key);
+            if (data == null || !data.Any())
+            {
+                data = await dbContext.Cities.AsNoTracking().Where(x => x.CountryId == Id).ToListAsync();
+                if (data.Any())
+                {
+                    await cache.Set(key, data, new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
+                    });
+                }
+            }
+            return Ok(data);
+        }
     }
 }

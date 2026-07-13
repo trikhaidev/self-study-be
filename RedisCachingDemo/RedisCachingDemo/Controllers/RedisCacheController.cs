@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RedisCachingDemo.Services;
+using System.ComponentModel.DataAnnotations;
 
 namespace RedisCachingDemo.Controllers
 {
@@ -23,6 +24,13 @@ namespace RedisCachingDemo.Controllers
         public async Task<IActionResult> GetAllKeysWithData()
         {
             return Ok(await cache.GetAllKeysWithData());
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> Remove([FromQuery][Required]string key)
+        {
+            await cache.Remove(key);
+            return Ok("Done");
         }
     }
 }
