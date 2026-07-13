@@ -33,6 +33,15 @@ namespace RedisCachingDemo
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("any",policy =>
+                {
+                    policy.AllowAnyHeader();
+                    policy.AllowAnyMethod();
+                    policy.AllowAnyOrigin();
+                });
+            });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -45,8 +54,9 @@ namespace RedisCachingDemo
 
             app.UseHttpsRedirection();
 
+            app.UseCors("any");
+            
             app.UseAuthorization();
-
 
             app.MapControllers();
 
