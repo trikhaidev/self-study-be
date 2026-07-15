@@ -19,14 +19,13 @@ namespace RedisCachingDemo
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext"));
             });
-
+            var config = builder.Configuration.GetSection("RedisConfig").Get<RedisConfig>()!;
             builder.Services.AddStackExchangeRedisCache(options =>
             {
-                var config = builder.Configuration.GetSection("RedisConfig").Get<RedisConfig>()!;
                 options.Configuration = config.Host;
                 options.InstanceName = config.InstanceName;
             });
-            builder.Services.AddSingleton<IConnectionMultiplexer>(options => ConnectionMultiplexer.Connect(builder.Configuration.GetSection("RedisConfig").GetSection("Host").Value!));
+            builder.Services.AddSingleton<IConnectionMultiplexer>(options => ConnectionMultiplexer.Connect(config.Host));
             builder.Services.AddScoped<IRedisCache, RedisCache>();
             builder.Services.Configure<RedisConfig>(builder.Configuration.GetSection("RedisConfig"));
             builder.Services.AddControllers();
